@@ -1,17 +1,19 @@
 import React, {Component} from 'react';
+import {filterReviews, postProcessReviews} from "./utils/postprocess-reviews";
 
 class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
             isFetching: false,
-            // contains the json
             wineReviews: [],
-            // contains the filtered wine-reviews
-            filteredWineReviews: [],
-            sortState: [],
-            searchInput: ''
-        }
+            headings: null,
+            reviews: null,
+            err: null
+        };
+
+        this.handleInputFilterChange = this.handleInputFilterChange.bind(this);
+        this.handleSortChange = this.handleSortChange.bind(this);
     }
 
     componentDidMount() {
@@ -27,35 +29,28 @@ class App extends Component {
         fetch('https://raw.githubusercontent.com/bindhyeswari/interview-prep/master/fixtures/sliced-wine-reviews.json?token=ABAZB7K4FZMNYMO3JIAFZIK6AKC54')
             .then(res => res.json())
             .then((data) => {
-                this.setState({
-                        wineReviews: data,
-                        filteredWineReviews: [...data],
-                        isFetching: false
-                    });
+                const {headings, reviews} = postProcessReviews(data);
 
-                console.log(this.state.wineReviews);
+                this.setState({
+                    isFetching: false,
+                    wineReviews: data,
+                    headings,
+                    reviews,
+                });
             })
             .catch((err) => {
-              console.log(err);
 
-              this.setState({
-                  ...this.state,
-                  isFetching: false
-              });
+                this.setState({
+                    isFetching: false,
+                    wineReviews: null,
+                    reviews: null,
+                    headings: null,
+                    err: err
+                });
             });
     }
 
-    renderReviewsData() {
-        let reviewsArr = [];
-
-        this.state.wineReviews.forEach(review => {
-            Object.values(review).forEach(prop => reviewsArr.push(prop));
-        });
-
-        return reviewsArr;
-    }
-
-    renderHeadingsData() {
+    getHeadingsData() {
         const set = new Set();
 
         this.state.wineReviews.forEach(review => {
@@ -63,6 +58,44 @@ class App extends Component {
         });
 
         return [...set];
+    }
+
+    renderHeadings(headings) {
+        const ths = Object.values(headings).map(heading => {
+            return <th key={heading.prop}>
+                <div>
+                    <input
+                        data-prop={heading.prop}
+                        placeholder={heading.prop}
+                        onChange={this.handleInputFilterChange}
+                        type="text"/>
+                </div>
+
+                <div
+                    data-prop={heading.prop}
+                    onClick={this.handleSortChange}>
+                    { heading.label.replace(/_/g, ' ') }
+                </div>
+            </th>
+        });
+
+        return <tr>
+            { ths }
+        </tr>
+    }
+
+    renderRows(reviewsArr) {
+        return reviewsArr.map(reviews => {
+            const tds = Object.entries(reviews).map(([prop, val]) => {
+                return <td key={prop}>
+                    {val}
+                </td>
+            });
+
+            return <tr key={reviews.id}>
+                { tds }
+            </tr>
+        })
     }
 
     sortBy(newReviewsArr, prop, asc) {
@@ -87,41 +120,63 @@ class App extends Component {
         else return 0;
     }
 
-    filterReviews(e) {
-        const reviews = this.state.wineReviews;
-        const headingEntries = Object.entries(this.renderHeadingsData());
+    handleInputFilterChange(e) {
+        const prop = e.target.dataset.prop;
+        const value = e.target.value;
+        const headings = this.state.headings;
 
-        return reviews.filter(review => {
-            return headingEntries.every(([prop, {filter}]) => {
-                if (filter) {
-                    return filter.test(review[prop])
-                } else {
-                    return true;
+        if (typeof value === "undefined") {
+            return null;
+        }
+
+        this.setState({
+            headings: {
+                ...headings,
+                [prop]: {
+                    ...headings[prop],
+                    filter: new RegExp(value, 'i')
                 }
-            });
+            }
         });
     }
 
+    handleSortChange = e => {
+        const headings = this.state.headings;
+        const prop = e.target.dataset.prop;
+        console.log(prop, headings[prop].sortState);
+
+        const newReviewsArr = [...this.state.wineReviews];
+        this.sortBy(newReviewsArr, prop, headings[prop].sortState);
+
+        this.setState({
+            headings: {
+                ...headings,
+                [prop]: {
+                    ...headings[prop],
+                    sortState: !headings[prop].sortState
+                }
+            }
+        }, () => {
+            console.log(this.state);
+        });
+    };
+
     render() {
+        let filteredReviews;
+        if (!this.state.reviews) {
+            return null;
+        } else {
+            filteredReviews = filterReviews(this.state.reviews, this.state.headings);
+        }
+
         return (
             <div>
-                <table id=''>
+                <table id='wineReviews'>
                     <thead>
-                        <tr>
-                            { Object.values(this.renderHeadingsData()).map((heading) => {
-                                return <th>
-                                    <input type="text" data-prop={heading} placeholder={heading} onChange={this.filterReviews()}/>
-                                    <div data-prop={heading}>{ heading.replace(/_/g, ' ') } </div>
-                                </th>
-                            })}
-                        </tr>
+                        {this.renderHeadings(this.state.headings)}
                     </thead>
                     <tbody>
-                        <tr>
-                            {Object.values(this.renderReviewsData()).map((item, index) => {
-                                return <td>{ item }</td>
-                            })}
-                        </tr>
+                        {this.renderRows(filteredReviews)}
                     </tbody>
                 </table>
             </div>
