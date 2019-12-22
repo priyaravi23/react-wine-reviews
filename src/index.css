@@ -11,3 +11,57 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+td:empty {
+  background-color: lightslategrey;
+}
+
+th {
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+td {
+  border-bottom: 1px solid lightgray;
+}
+
+th > div[data-prop] {
+  padding-top: 20px;
+  font-size: 15px;
+  text-wrap: none;
+}
+
+td:empty::after {
+  /*content: 'N/A'*/
+}
+
+input[type=search]{
+  border-radius:10px;
+  outline:0;
+  padding:5px;
+}
+
+input[type=search]:focus{
+  box-shadow:0 0 4px blue;
+}
+
+.hidden {
+  display:none;
+}
+
+tbody tr:nth-child(odd) {
+  background-color: whitesmoke;
+}
+
+tbody tr:nth-child(even) {
+  background-color: white;
+}
+
+th, td {
+  padding: 10px;
+  text-align: center;
+}
