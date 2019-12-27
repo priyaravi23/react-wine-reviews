@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {filterReviews, postProcessReviews} from "./utils/postprocess-reviews";
+import {filterAndSortReviews, postProcessReviews} from "./utils/postprocess-reviews";
 
 class App extends Component {
     constructor(props) {
@@ -9,8 +9,11 @@ class App extends Component {
             wineReviews: [],
             headings: null,
             reviews: null,
-            err: null
+            err: null,
+            sortByHeading: 'title' // Default sort by title
         };
+
+        // React uses 'use strict' by default
 
         this.handleInputFilterChange = this.handleInputFilterChange.bind(this);
         this.handleSortChange = this.handleSortChange.bind(this);
@@ -26,7 +29,7 @@ class App extends Component {
             isFetching: true
         });
 
-        fetch('https://raw.githubusercontent.com/bindhyeswari/interview-prep/master/fixtures/sliced-wine-reviews.json?token=ABAZB7K4FZMNYMO3JIAFZIK6AKC54')
+        fetch('https://raw.githubusercontent.com/bindhyeswari/interview-prep/master/fixtures/sliced-wine-reviews.json?token=ABAZB7JXUU44365BZ4GB5UK6BZ3AS')
             .then(res => res.json())
             .then((data) => {
                 const {headings, reviews} = postProcessReviews(data);
@@ -36,6 +39,7 @@ class App extends Component {
                     wineReviews: data,
                     headings,
                     reviews,
+                    err: null
                 });
             })
             .catch((err) => {
@@ -98,28 +102,6 @@ class App extends Component {
         })
     }
 
-    sortBy(newReviewsArr, prop, asc) {
-        // sort fn
-        if (asc) {
-            newReviewsArr.sort(this.compareFnAsc.bind(null, prop));
-        } else {
-            newReviewsArr.sort(this.compareFnDesc.bind(null, prop));
-        }
-        return newReviewsArr;
-    }
-
-    compareFnAsc(prop, a, b) {
-        if (a[prop] > b[prop]) return 1;
-        else if (a[prop] < b[prop]) return -1;
-        else return 0;
-    }
-
-    compareFnDesc(prop, a, b) {
-        if (a[prop] > b[prop]) return -1;
-        else if (a[prop] < b[prop]) return 1;
-        else return 0;
-    }
-
     handleInputFilterChange(e) {
         const prop = e.target.dataset.prop;
         const value = e.target.value;
@@ -140,13 +122,10 @@ class App extends Component {
         });
     }
 
-    handleSortChange = e => {
+    handleSortChange(e) {
         const headings = this.state.headings;
         const prop = e.target.dataset.prop;
         console.log(prop, headings[prop].sortState);
-
-        const newReviewsArr = [...this.state.wineReviews];
-        this.sortBy(newReviewsArr, prop, headings[prop].sortState);
 
         this.setState({
             headings: {
@@ -155,7 +134,8 @@ class App extends Component {
                     ...headings[prop],
                     sortState: !headings[prop].sortState
                 }
-            }
+            },
+            sortByHeading: prop
         }, () => {
             console.log(this.state);
         });
@@ -166,7 +146,8 @@ class App extends Component {
         if (!this.state.reviews) {
             return null;
         } else {
-            filteredReviews = filterReviews(this.state.reviews, this.state.headings);
+            const isAscending = false; // Sort descending
+            filteredReviews = filterAndSortReviews(this.state.reviews, this.state.headings, this.state.sortByHeading, isAscending);
         }
 
         return (

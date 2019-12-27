@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {filterReviews, postProcessReviews} from "./utils/postprocess-reviews";
+import {filterAndSortReviews, postProcessReviews} from "./utils/postprocess-reviews";
 
 const Review = (props) => {
     const {review} = props;
@@ -8,25 +8,27 @@ const Review = (props) => {
     </div>
 };
 
-class RenderTable extends Component {
+class App extends Component {
+    static displayName = 'App';
     static propTypes = {};
 
     state = {
         // STORE MODEL DATA IN OBJECTS, NOT ARRAYS
-        isFetching: false,
+        inProgress: false,
         reviews: null, // object that has each review id mapped specifically
         err: null,
-        headings: null
+        headings: null,
+        sortByHeading: 'title' // Default sort by title
     };
 
     async componentDidMount() {
         try {
-            const response = await fetch('https://raw.githubusercontent.com/bindhyeswari/interview-prep/master/fixtures/sliced-wine-reviews.json?token=ABAZB7K4FZMNYMO3JIAFZIK6AKC54');
+            const response = await fetch('https://raw.githubusercontent.com/bindhyeswari/interview-prep/master/fixtures/sliced-wine-reviews.json?token=ABAZB7JXUU44365BZ4GB5UK6BZ3AS');
             const data = await response.json();
             const {headings, reviews} = postProcessReviews(data);
             console.log(headings, reviews[0]);
             this.setState({
-                isFetching: false,
+                inProgress: false,
                 err: null,
                 headings,
                 reviews
@@ -34,7 +36,7 @@ class RenderTable extends Component {
         } catch (ex) {
             console.log('Error ');
             this.setState({
-                isFetching: false,
+                inProgress: false,
                 reviews: null,
                 headings: null,
                 err: ex
@@ -44,26 +46,24 @@ class RenderTable extends Component {
 
 
     render() {
-        const {isFetching} = this.state;
+        const {inProgress} = this.state;
         return (
             <div>
-                {isFetching && <div>Fetching reviews ... </div>}
+                {inProgress && <div>Fetching reviews ... </div>}
                 {this.renderReviews()}
             </div>
         );
     }
 
-    /**
-     * Create a table and render the reviews
-     * **/
-
     renderReviews = () => {
-        const {reviews, headings} = this.state;
+        const {reviews, headings, sortByHeading} = this.state;
+        // create a table and render the reviews ...
         let filteredReviews;
         if (!reviews) {
             return null;
         } else {
-            filteredReviews = filterReviews(reviews, headings);
+            const isAscending = false; // Sort descending
+            filteredReviews = filterAndSortReviews(reviews, headings, sortByHeading, isAscending);
             console.log(filteredReviews);
         }
         return (<table>
@@ -77,10 +77,6 @@ class RenderTable extends Component {
     };
 
     renderHeadings = (headings) => {
-        // Creating the props from the first review .. but you should
-        // check all rows if we have missed any props. Follow the
-        // set approach
-        // document.addEventListener('blur', () => {})
         const ths = Object.values(headings).map(heading =>
             <th key={heading.prop}>
                 <div>
@@ -132,7 +128,6 @@ class RenderTable extends Component {
             }
         });
     };
-
     handleSortChange = e => {
         const {headings} = this.state;
         const {dataset: {prop}} = e.target;
@@ -145,11 +140,12 @@ class RenderTable extends Component {
                     ...headings[prop],
                     sortState: !headings[prop].sortState
                 }
-            }
+            },
+            sortByHeading: prop
         }, () => {
             console.log(this.state);
         });
     };
 }
 
-export default RenderTable;
+export default App;
