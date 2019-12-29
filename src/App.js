@@ -1,5 +1,15 @@
 import React, {Component} from 'react';
 import {filterAndSortReviews, postProcessReviews} from "./utils/postprocess-reviews";
+import PickReviewsComponent from './pick-reviews.component'
+
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route,
+    Link,
+    useRouteMatch,
+    useParams
+} from "react-router-dom";
 
 class App extends Component {
     constructor(props) {
@@ -33,6 +43,7 @@ class App extends Component {
             .then(res => res.json())
             .then((data) => {
                 const {headings, reviews} = postProcessReviews(data);
+                console.log(typeof postProcessReviews(data).reviews);
 
                 this.setState({
                     isFetching: false,
@@ -91,9 +102,29 @@ class App extends Component {
     renderRows(reviewsArr) {
         return reviewsArr.map(reviews => {
             const tds = Object.entries(reviews).map(([prop, val]) => {
-                return <td key={prop}>
-                    {val}
-                </td>
+
+                if (prop === 'title') {
+                    return <td key={prop}>
+                        {val + ''}
+
+                        <Router>
+                            <Link className= 'text-link' to={"/details/" + reviews.id}>
+                                <div>View Details</div>
+                                    </Link>
+
+                            <Switch>
+                                <Route path={"/details/" + reviews.id}>
+                                    <PickReviewsComponent />
+                                </Route>
+                            </Switch>
+
+                        </Router>
+                    </td>
+                } else {
+                    return <td key={prop}>
+                        {val}
+                    </td>
+                }
             });
 
             return <tr key={reviews.id}>
