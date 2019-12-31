@@ -5,8 +5,8 @@ export const postProcessReviews = reviews => {
     const obj = {};
     const set = new Set();
     // map unique ids to each review
-    reviews.forEach(review => {
-        const id = uuid.v4(); // use the v4 for random uuids
+    reviews.forEach((review, index) => {
+        const id = index; //uuid.v4(); // use the v4 for random uuids
         review.id = id;
         review.points = +review.points;
         obj[id] = review;
