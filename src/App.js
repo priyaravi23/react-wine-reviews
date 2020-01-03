@@ -1,7 +1,8 @@
-import React, {Component} from 'react';
-import {object, string, func} from 'prop-types';
-import {Switch, Route} from 'react-router-dom';
-import {filterAndSortReviews, postProcessReviews} from "./utils/postprocess-reviews";
+import React, { Component } from 'react';
+import store from './redux/store';
+import { fetchWineReviews } from "./redux/actions/wine-reviews";
+import { Switch, Route } from 'react-router-dom';
+import { postProcessReviews } from "./utils/postprocess-reviews";
 
 import './App.css';
 import './index.css';
@@ -26,27 +27,22 @@ class App extends Component {
         this.handleSortChange = this.handleSortChange.bind(this);
     }
 
-    async componentDidMount() {
-        try {
-            const response = await fetch('https://raw.githubusercontent.com/bindhyeswari/interview-prep/master/fixtures/sliced-wine-reviews.json?token=ABAZB7MHZJOYQXN2PFHMQYK6DC3UU');
-            const data = await response.json();
-            const {headings, reviews} = postProcessReviews(data);
-            console.log(headings, reviews[0]);
+    componentDidMount() {
+        console.log('Registered listener on store.');
+        store.subscribe((...args) => {
+            console.log('Seems like the store\'s state has changed');
+            const {fetchInProgress, reviews: _reviews, err} = store.getState();
+            const {headings, reviews} = postProcessReviews(_reviews);
             this.setState({
-                inProgress: false,
-                err: null,
-                headings,
-                reviews
+                inProgress: fetchInProgress,
+                reviews,
+                err,
+                headings
             });
-        } catch (ex) {
-            console.log('Error ');
-            this.setState({
-                inProgress: false,
-                reviews: null,
-                headings: null,
-                err: ex
-            });
-        }
+        });
+
+        // fetch wine reviews etc
+        store.dispatch(fetchWineReviews());
     }
 
     render() {
