@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
-import store from './redux/store';
-import { fetchWineReviews } from "./redux/actions/wine-reviews";
+import {dispatchFetchWineReviews} from "./redux/actions/wine-reviews";
 import { Switch, Route } from 'react-router-dom';
-import { postProcessReviews } from "./utils/postprocess-reviews";
 
 import './App.css';
 import './index.css';
@@ -13,36 +11,15 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            isFetching: false,
-            wineReviews: [],
-            headings: null,
-            reviews: null,
-            err: null,
-            sortByHeading: 'title' // Default sort by title
+            sortByHeading: 'title'
         };
-
-        // React uses 'use strict' by default
-
         this.handleInputFilterChange = this.handleInputFilterChange.bind(this);
         this.handleSortChange = this.handleSortChange.bind(this);
     }
 
     componentDidMount() {
-        console.log('Registered listener on store.');
-        store.subscribe((...args) => {
-            console.log('Seems like the store\'s state has changed');
-            const {fetchInProgress, reviews: _reviews, err} = store.getState();
-            const {headings, reviews} = postProcessReviews(_reviews);
-            this.setState({
-                inProgress: fetchInProgress,
-                reviews,
-                err,
-                headings
-            });
-        });
-
-        // fetch wine reviews etc
-        store.dispatch(fetchWineReviews());
+        // store.dispatch(fetchWineReviews());
+      dispatchFetchWineReviews();
     }
 
     render() {
@@ -53,19 +30,11 @@ class App extends Component {
     };
 
     render1() {
-        const {inProgress} = this.state;
-
-        const {reviews, headings, sortByHeading, selectedReview} = this.state;
+        const {sortByHeading} = this.state;
         const reviewsListProps = {
-            reviews,
-            headings,
             sortByHeading,
             handleInputFilterChange: this.handleInputFilterChange,
             handleSortChange: this.handleSortChange
-        };
-
-        const reviewDetailProps = {
-            reviews: reviews
         };
 
         // Similar approach that does not use the this.props.children approach
@@ -73,13 +42,12 @@ class App extends Component {
 
         return (
             <div>
-                {inProgress && <div>Fetching reviews ... </div>}
                 <Switch>
                     <Route exact path={'/reviews'}>
                         <ReviewsList {...reviewsListProps}/>
                     </Route>
                     <Route exact path={'/reviews/:id'}
-                           component={(props) => <ReviewDetails {...reviewDetailProps} {...props}/>}/>
+                           component={(props) => <ReviewDetails {...props}/>}/>
                     <Route path={'/'} component={() => <div>Default Page</div>}/>
                 </Switch>
             </div>

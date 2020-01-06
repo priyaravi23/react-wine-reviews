@@ -4,6 +4,7 @@ import {
     FETCH_WINE_REVIEWS_SUCCESS,
     SELECT_WINE_REVIEW
 } from "../action-types";
+import store from '../store';
 
 import { WINE_REVIEWS_URL } from "../../utils/constants";
 
@@ -57,4 +58,8 @@ export const fetchWineReviews = () => {
             dispatch(fetchWineReviewsFailure(err));
         });
     };
+};
+
+export const dispatchFetchWineReviews = () => {
+    return store.dispatch(fetchWineReviews())
 };
