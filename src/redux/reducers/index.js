@@ -4,6 +4,7 @@ import {
   FETCH_WINE_REVIEWS_SUCCESS,
   SELECT_WINE_REVIEW
 } from "../action-types";
+import {combineReducers} from 'redux';
 import {postProcessReviews} from "../../utils/postprocess-reviews";
 
 const DEFAULT_WINE_REVIEW_STATE = {
@@ -44,5 +45,15 @@ export function wineReviews(prevState = DEFAULT_WINE_REVIEW_STATE, action) {
         ...prevState,
         reviews: action.reviews
       };
+    default:
+      return prevState;
   }
 }
+export function users(prevState = {users: []}, action) {
+  return prevState;
+}
+
+export default combineReducers({
+  wineReviews,
+  users
+});

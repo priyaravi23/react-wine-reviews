@@ -43,8 +43,8 @@ export const generateCompareFn = (asc, prop) => {
     }
 };
 
-export const filterAndSortReviews = (reviews, headings, sortByProp) => {
-    const props = Object.keys(headings);
+export const filterAndSortReviews = (reviews = {}, headings = {}, sortByProp) => {
+    const props = Object.keys(headings || {});
     const _sortState = get(headings, `${sortByProp}.sortState`);
     const sortState = typeof _sortState === 'undefined' ? true : _sortState;
 

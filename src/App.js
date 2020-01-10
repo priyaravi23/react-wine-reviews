@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import {dispatchFetchWineReviews} from "./redux/actions/wine-reviews";
 import { Switch, Route } from 'react-router-dom';
 
-import './App.css';
+import './App.scss';
 import './index.css';
 import ReviewsList from "./components/reviews-list";
 import ReviewDetails from "./components/review-details";
@@ -13,8 +13,6 @@ class App extends Component {
         this.state = {
             sortByHeading: 'title'
         };
-        this.handleInputFilterChange = this.handleInputFilterChange.bind(this);
-        this.handleSortChange = this.handleSortChange.bind(this);
     }
 
     componentDidMount() {
@@ -24,6 +22,7 @@ class App extends Component {
 
     render() {
         return <div>
+            <div className="my-component"> </div>
             {this.render1()}
         </div>
 
@@ -53,57 +52,6 @@ class App extends Component {
             </div>
         );
     }
-
-    renderReviews = () => {
-        const {reviews, headings, sortByHeading} = this.state;
-        const props = {
-            reviews,
-            headings,
-            sortByHeading,
-            handleInputFilterChange: this.handleInputFilterChange,
-            handleSortChange: this.handleSortChange
-        };
-        return (<ReviewsList {...props}/>);
-    };
-
-    handleInputFilterChange(e) {
-        const prop = e.target.dataset.prop;
-        const value = e.target.value;
-        const headings = this.state.headings;
-
-        if (typeof value === "undefined") {
-            return null;
-        }
-
-        this.setState({
-            headings: {
-                ...headings,
-                [prop]: {
-                    ...headings[prop],
-                    filter: new RegExp(value, 'i')
-                }
-            }
-        });
-    }
-
-    handleSortChange(e) {
-        const headings = this.state.headings;
-        const prop = e.target.dataset.prop;
-        console.log(prop, headings[prop].sortState);
-
-        this.setState({
-            headings: {
-                ...headings,
-                [prop]: {
-                    ...headings[prop],
-                    sortState: !headings[prop].sortState
-                }
-            },
-            sortByHeading: prop
-        }, () => {
-            console.log(this.state);
-        });
-    };
 }
 
 export default App;

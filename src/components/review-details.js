@@ -58,8 +58,8 @@ class ReviewDetails extends Component {
 const mapStateToProps = reduxState => {
   console.log(reduxState);
   return {
-    reviews: get(reduxState, 'reviews') || [],
-    fetchInProgress: get(reduxState, 'fetchInProgress') || false,
+    reviews: get(reduxState, 'wineReviews.reviews') || [],
+    fetchInProgress: get(reduxState, 'wineReviews.fetchInProgress') || false,
   }
 };
 

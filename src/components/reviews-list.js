@@ -3,6 +3,7 @@ import {Link} from 'react-router-dom';
 import {connect} from 'react-redux';
 import {object, string, func, bool} from 'prop-types';
 import {filterAndSortReviews} from "../utils/postprocess-reviews";
+import get from 'lodash/get';
 
 class ReviewsList extends Component {
   static displayName = 'ReviewsList';
@@ -10,13 +11,29 @@ class ReviewsList extends Component {
     reviews: object,
     headings: object,
     fetchInProgress: bool,
-    sortByHeading: string,
-    handleInputFilterChange: func,
-    handleSortChange: func
+    sortByHeading: string
   };
 
+  state = {
+    headings: null
+  };
+
+  static getDerivedStateFromProps(props, state) {
+    // console.log('Firing the method getDerivedStateFromProps', props, state);
+    const headingsFromProps = props.headings;
+    if (Object.keys(headingsFromProps).length > 0) {
+      console.log('Setting headings in state from props');
+      return {
+        headings: headingsFromProps
+      };
+    }
+  }
+
   render() {
-    const {reviews, headings, sortByHeading} = this.props;
+    console.log('props headings', this.props.headings, 'state headings', this.state.headings);
+    console.log('Firing the render() method of the ReviewsList');
+    const {reviews, sortByHeading} = this.props;
+    const {headings} = this.state;
     // create a table and render the reviews ...
     let filteredReviews;
     if (!reviews) {
@@ -27,9 +44,10 @@ class ReviewsList extends Component {
       console.log(filteredReviews);
     }
     return (<div>
+      <div className="my-component"> </div>
       {this.props.fetchInProgress ? (<div>Fetch in progress!</div>) : (<table>
         <thead>
-        {this.renderHeadings(headings)}
+        {this.renderHeadings(headings, sortByHeading)}
         </thead>
         <tbody>
         {this.renderRows(filteredReviews)}
@@ -38,19 +56,30 @@ class ReviewsList extends Component {
     </div>);
   }
 
-  renderHeadings = (headings) => {
+  renderHeadings = (headings = {}, sortByHeading) => {
+    if (!headings) {
+      return null;
+    }
+    let sortChar = '';
+    if (sortByHeading && headings[sortByHeading]) {
+      const {sortState} = headings[sortByHeading];
+      console.log('Sort by', sortByHeading, ' and sort state is ', sortState);
+      if (typeof sortState !== 'undefined') {
+        sortChar = sortState ? '(asc)' : '(desc)';
+      }
+    }
     const ths = Object.values(headings).map(heading =>
       <th key={heading.prop}>
         <div>
           <input
-            onChange={this.props.handleInputFilterChange}
+            onChange={this.handleInputFilterChange}
             data-prop={heading.prop}
             type="text"/>
         </div>
         <div
-          onClick={this.props.handleSortChange}
+          onClick={this.handleSortChange}
           data-prop={heading.prop}>
-          {heading.label}
+          {heading.label} {heading.prop === sortByHeading ? sortChar : ''}
         </div>
       </th>);
     return (<tr>
@@ -73,14 +102,53 @@ class ReviewsList extends Component {
       </tr>);
     });
   };
+
+  handleInputFilterChange(e) {
+    const prop = e.target.dataset.prop;
+    const value = e.target.value;
+    const headings = this.state.headings;
+
+    if (typeof value === "undefined") {
+      return null;
+    }
+
+    this.setState({
+      headings: {
+        ...headings,
+        [prop]: {
+          ...headings[prop],
+          filter: new RegExp(value, 'i')
+        }
+      }
+    });
+  }
+
+  handleSortChange(e) {
+    const headings = this.state.headings;
+    const prop = e.target.dataset.prop;
+    console.log(prop, headings[prop].sortState);
+
+    this.setState({
+      headings: {
+        ...headings,
+        [prop]: {
+          ...headings[prop],
+          sortState: !headings[prop].sortState
+        }
+      },
+      sortByHeading: prop
+    }, () => {
+      console.log(this.state);
+    });
+  };
 }
 
 const mapStateToProps = reducerState => {
-  const {reviews = {}, headings = {}, fetchInProgress = false} = reducerState || {};
+  const {reviews = {}, headings = {}, fetchInProgress = false} = get(reducerState, 'wineReviews') || {};
   return {
     reviews,
-    headings,
-    fetchInProgress
+    fetchInProgress,
+    headings
   }
 };
 
